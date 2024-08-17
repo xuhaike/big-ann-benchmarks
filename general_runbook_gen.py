@@ -65,11 +65,14 @@ def create_runbook(
     output_yaml_file:str
 ):
 
+    random.seed(816)
+
     operation_list = []
     num_operations = 1
     active_points = 0
     max_pts = 0
 
+    checkpoint_per_step=10
 
     blocks=[]
     for c in range(num_clusters):
@@ -87,9 +90,15 @@ def create_runbook(
     active_blocks=[[] for _ in range(num_clusters)]
     cur_block_cursor=[0]*num_clusters
 
-    for round in range(4):
+    num_active_blocks=[0]*num_clusters
+
+    # In the first 60% time steps: consecutively insert 10% points and then remove a random fraction of the index size between 30% to 60%, repeat this for 6 rounds.
+
+    num_rounds=6
+
+    for round in range(num_rounds):
         for c in range(num_clusters):
-            for step in range(15):
+            for step in range(10):
                 #insertions
                 block_id=cur_block_cursor[c]
                 delta = blocks[c][block_id][1]-blocks[c][block_id][0]
@@ -98,27 +107,33 @@ def create_runbook(
                 max_pts = max(max_pts, active_points)
                 active_blocks[c].append(block_id)
 
-                print('ins [', blocks[c][block_id][0], ', ', blocks[c][block_id][1], 
-                    ')' , 'total:', active_points)
+                num_active_blocks[c]+=1
+
+                # print('ins [', blocks[c][block_id][0], ', ', blocks[c][block_id][1], ')' , 'total:', active_points)
 
                 # entry = [{'operation': 'insert'}, {'start': int(blocks[c][block_id][0])}, {'end': int(blocks[c][block_id][1])}]
                 entry = {'operation': 'insert', 'start': int(blocks[c][block_id][0]), 'end': int(blocks[c][block_id][1])}
                 operation_list.append((num_operations, entry))
                 num_operations += 1
 
-                if num_operations%100==0:
+                if num_operations%checkpoint_per_step==0:
                     # operation_list.append((num_operations, [{'operation': str('search')}]))
                     operation_list.append((num_operations, {'operation': str('search')}))
                     num_operations += 1
 
                 cur_block_cursor[c]+=1
 
-        if round<3:
-            delete_steps=14
-        else:
-            delete_steps=3
+        # delete a random fraction 30% to 60% of active points 
+        
+        print(round, num_operations, num_active_blocks[c],active_points)
 
         for c in range(num_clusters):
+
+            if round<num_rounds-1:
+                delete_steps=random.randint(int(num_active_blocks[c]*0.5),int(num_active_blocks[c]*0.9))
+            else:
+                delete_steps=int(num_active_blocks[c]*0.2)
+
             for step in range(delete_steps):        
                 #deletions
                 delete_type=random.randint(0,9)
@@ -132,15 +147,17 @@ def create_runbook(
                     
                 delta = blocks[c][block_id][1]-blocks[c][block_id][0]
                 
+                num_active_blocks[c]-=1
+
                 active_points -= delta
-                print('del [', blocks[c][block_id][0], ', ', blocks[c][block_id][1], 
-                    ')' , 'total:', active_points)
+                # print('del [', blocks[c][block_id][0], ', ', blocks[c][block_id][1], ')' , 'total:', active_points)
+
                 # entry = [{'operation': 'delete'}, {'start': int(blocks[c][block_id][0])}, {'end': int(blocks[c][block_id][1])}]
                 entry = {'operation': 'delete', 'start': int(blocks[c][block_id][0]), 'end': int(blocks[c][block_id][1])}
                 operation_list.append((num_operations, entry))
                 num_operations += 1
 
-                if num_operations%100==0:
+                if num_operations%checkpoint_per_step==0:
                     # operation_list.append((num_operations, [{'operation': str('search')}]))
                     operation_list.append((num_operations, {'operation': str('search')}))
                     num_operations += 1
@@ -148,15 +165,18 @@ def create_runbook(
 
         print("round = ", round, "active points = ", active_points)
 
+    # in the later 40% steps, insert and delete in a interleaving way so that the index size is stable
     
     for c in range(num_clusters):
 
-        for round in range(40):
+        while cur_block_cursor[c]<len(blocks[c]):
 
             for step in range(1):
                 #insertions
                 block_id=cur_block_cursor[c]
                 delta = blocks[c][block_id][1]-blocks[c][block_id][0]
+
+                num_active_blocks[c]+=1
 
                 active_points += delta
                 max_pts = max(max_pts, active_points)
@@ -175,7 +195,7 @@ def create_runbook(
                 # operation_list.append((num_operations, {'operation': str('search')}))
                 # num_operations += 1
 
-                if num_operations%100==0:
+                if num_operations%checkpoint_per_step==0:
                     # operation_list.append((num_operations, [{'operation': str('search')}]))
                     operation_list.append((num_operations, {'operation': str('search')}))
                     num_operations += 1
@@ -193,6 +213,8 @@ def create_runbook(
 
                 delta = blocks[c][block_id][1]-blocks[c][block_id][0]
                 
+                num_active_blocks[c]-=1
+
                 active_points -= delta
                 print('del [', blocks[c][block_id][0], ', ', blocks[c][block_id][1], 
                     ')' , 'total:', active_points)
@@ -204,7 +226,7 @@ def create_runbook(
                 # operation_list.append((num_operations, {'operation': 'search'}))
                 # num_operations += 1
 
-                if num_operations%100==0:
+                if num_operations%checkpoint_per_step==0:
                     # operation_list.append((num_operations, [{'operation': str('search')}]))
                     operation_list.append((num_operations, {'operation': str('search')}))
                     num_operations += 1

@@ -1,16 +1,24 @@
+import os
 import yaml
 
 
-with open("data/msmarco_websearch_100clustered/msmarco-10M-100clustered-general-runbook.yaml", 'r') as file:
-# with open("data/wikipedia_cohere_100clustered/wikipedia-35M-100clustered-general-runbook.yaml", 'r') as file:
+# dataset_name="msmarco-10M"
+dataset_name="msmarco-10M"
+# dataset_name="wikipedia-35M"
+
+plot_name="817"
+
+if dataset_name=="msmarco-10M":
+    # yaml_path="data/msmarco_websearch_20clustered/msmarco-10M-20clustered-general-runbook.yaml"
+    yaml_path="data/msmarco_websearch_20clustered_original/msmarco-10M-20clustered-general-runbook.yaml"
+    max_points=10000000
+elif dataset_name=="wikipedia-35M":
+    yaml_path="data/wikipedia_cohere_60clustered/wikipedia-35M-60clustered-general-runbook.yaml"
+    max_points=35000000
+
+with open(yaml_path, 'r') as file:
     data = yaml.safe_load(file)
 
-
-dataset_name='msmarco-10M'
-max_points=10000000
-
-# dataset_name="wikipedia-35M"
-# max_points=35000000
 
 insert_time=[0]*max_points
 delete_time=[0]*max_points
@@ -41,6 +49,7 @@ num_points=0
 for t in range(max_time):
     num_points+=sum_points[t]
     stats_points.append(num_points)
+    print(t,num_points)
 # for t in range(max_time):
 #     for i in range(max_points):
 #         if insert_time[i]==t:
@@ -54,4 +63,4 @@ import matplotlib.pyplot as plt
 plt.plot(stats_points)
 
 # plt.savefig('stats_points.pdf',format="pdf")
-plt.savefig(f'stats_points_{dataset_name}.png',dpi=400)
+plt.savefig(f'stats_points_{dataset_name}_{plot_name}.png',dpi=400)
