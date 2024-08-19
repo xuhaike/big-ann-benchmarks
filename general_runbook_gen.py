@@ -65,7 +65,14 @@ def create_runbook(
     output_yaml_file:str
 ):
 
-    random.seed(816)
+    if "msmarco" in dataset_str:
+        random.seed(8160)
+        rng = np.random.default_rng(8160)
+    elif "wikipedia" in dataset_str:
+        random.seed(8161)
+        rng = np.random.default_rng(8161)
+
+    # rng=np.random.default_rng()
 
     operation_list = []
     num_operations = 1
@@ -94,11 +101,29 @@ def create_runbook(
 
     # In the first 60% time steps: consecutively insert 10% points and then remove a random fraction of the index size between 30% to 60%, repeat this for 6 rounds.
 
-    num_rounds=6
+    # num_rounds=8
+    # num_block_per_round = rng.dirichlet((100,50,30,15,10,5,3,1), num_clusters)
 
-    for round in range(num_rounds):
+    num_rounds=6
+    num_block_per_round = rng.dirichlet((100,15,10,5,3,1), num_clusters)
+
+    round_sum=[]
+    for c in range(num_clusters):
+        rng.shuffle(num_block_per_round[c])
+        # num_block_per_round[c]=[int(x*100) for x in num_block_per_round[c]]
+        # assert(sum(num_block_per_round[c])<=100)
+    # for i in range(num_rounds):
+        # round_sum.append((sum([num_block_per_round[c][i] for c in range(num_clusters)]),i))
+    # round_sum=sorted(round_sum)
+    # round_sum=round_sum[1:]+round_sum[:1]
+    # for c in range(num_clusters):
+        # num_block_per_round[c]=[num_block_per_round[c][y] for (x,y) in round_sum]
+
+    num_block_per_round=(num_block_per_round*100).astype(int)
+
+    for round in range(num_rounds-1):
         for c in range(num_clusters):
-            for step in range(10):
+            for step in range(num_block_per_round[c][round]):
                 #insertions
                 block_id=cur_block_cursor[c]
                 delta = blocks[c][block_id][1]-blocks[c][block_id][0]
@@ -129,10 +154,11 @@ def create_runbook(
 
         for c in range(num_clusters):
 
-            if round<num_rounds-1:
+            if round<num_rounds-2:
                 delete_steps=random.randint(int(num_active_blocks[c]*0.5),int(num_active_blocks[c]*0.9))
             else:
-                delete_steps=int(num_active_blocks[c]*0.2)
+                # delete_steps=int(num_active_blocks[c]*0.2)
+                delete_steps=0
 
             for step in range(delete_steps):        
                 #deletions
@@ -281,7 +307,7 @@ def main():
                          permutation=permutation,
                          output_data_file=args.output_data_file)
 
-    print("write permuted data completes")
+    # print("write permuted data completes")
 
     create_runbook(dataset_str=args.dataset,
                    offsets=offsets,

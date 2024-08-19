@@ -80,7 +80,6 @@ def create_runbook(
     sample = np.random.default_rng().dirichlet((100,15,10,5,3), num_clusters)
     for c in range(num_clusters):
         np.random.default_rng().shuffle(sample[c])
-    print(sample)
 
     for round in range(num_rounds):
         #insertions

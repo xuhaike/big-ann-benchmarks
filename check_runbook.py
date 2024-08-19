@@ -2,18 +2,20 @@ import os
 import yaml
 
 
-# dataset_name="msmarco-10M"
 dataset_name="msmarco-10M"
 # dataset_name="wikipedia-35M"
 
-plot_name="817"
+plot_name="818eve"
 
 if dataset_name=="msmarco-10M":
     # yaml_path="data/msmarco_websearch_20clustered/msmarco-10M-20clustered-general-runbook.yaml"
-    yaml_path="data/msmarco_websearch_20clustered_original/msmarco-10M-20clustered-general-runbook.yaml"
+    # yaml_path="data/msmarco_websearch_20clustered_original/msmarco-10M-20clustered-general-runbook.yaml"
+    yaml_path="data/msmarco_websearch_20clustered_dirichlet/msmarco-10M-20clustered-general-runbook.yaml"
     max_points=10000000
 elif dataset_name=="wikipedia-35M":
-    yaml_path="data/wikipedia_cohere_60clustered/wikipedia-35M-60clustered-general-runbook.yaml"
+    # yaml_path="data/wikipedia_cohere_60clustered/wikipedia-35M-60clustered-general-runbook.yaml"
+    # yaml_path="data/wikipedia_cohere_60clustered_original/wikipedia-35M-60clustered-general-runbook.yaml"
+    yaml_path="data/wikipedia_cohere_60clustered_dirichlet/wikipedia-35M-60clustered-general-runbook.yaml"
     max_points=35000000
 
 with open(yaml_path, 'r') as file:
