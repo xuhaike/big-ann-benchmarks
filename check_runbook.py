@@ -2,10 +2,11 @@ import os
 import yaml
 
 
-dataset_name="msmarco-10M"
+# dataset_name="msmarco-10M"
 # dataset_name="wikipedia-35M"
+dataset_name="openai-2M"
 
-plot_name="818eve"
+plot_name="819aft"
 
 if dataset_name=="msmarco-10M":
     # yaml_path="data/msmarco_websearch_20clustered/msmarco-10M-20clustered-general-runbook.yaml"
@@ -17,6 +18,13 @@ elif dataset_name=="wikipedia-35M":
     # yaml_path="data/wikipedia_cohere_60clustered_original/wikipedia-35M-60clustered-general-runbook.yaml"
     yaml_path="data/wikipedia_cohere_60clustered_dirichlet/wikipedia-35M-60clustered-general-runbook.yaml"
     max_points=35000000
+elif dataset_name=="openai-2M":
+    # yaml_path="data/wikipedia_cohere_60clustered/wikipedia-35M-60clustered-general-runbook.yaml"
+    # yaml_path="data/wikipedia_cohere_60clustered_original/wikipedia-35M-60clustered-general-runbook.yaml"
+    # yaml_path="data/OpenAIArXiv_10clustered_dirichlet/openai-2M-10clustered-general-runbook.yaml"
+    # yaml_path="data/OpenAIArXiv_5clustered_dirichlet/openai-2M-5clustered-general-runbook.yaml"
+    yaml_path="data/OpenAIArXiv_10clustered_dirichlet/openai-2M-10clustered-general-runbook.yaml"
+    max_points=2321096
 
 with open(yaml_path, 'r') as file:
     data = yaml.safe_load(file)

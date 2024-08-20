@@ -68,9 +68,18 @@ def create_runbook(
     if "msmarco" in dataset_str:
         random.seed(8160)
         rng = np.random.default_rng(8160)
+        checkpoint_per_step=10
+        blocks_per_cluster=100
     elif "wikipedia" in dataset_str:
         random.seed(8161)
         rng = np.random.default_rng(8161)
+        checkpoint_per_step=10
+        blocks_per_cluster=100
+    elif "openai" in dataset_str:
+        random.seed(8164)
+        rng = np.random.default_rng(8164)
+        checkpoint_per_step=3
+        blocks_per_cluster=100
 
     # rng=np.random.default_rng()
 
@@ -79,17 +88,17 @@ def create_runbook(
     active_points = 0
     max_pts = 0
 
-    checkpoint_per_step=10
+    
 
     blocks=[]
     for c in range(num_clusters):
         current_block=[]
         start=offsets[c]
         end=offsets[c+1]
-        block_size=(end-start)//100
-        for i in range(99):
+        block_size=(end-start)//blocks_per_cluster
+        for i in range(blocks_per_cluster-1):
             current_block.append((start+i*block_size,start+(i+1)*block_size))
-        current_block.append((start+99*block_size,end))
+        current_block.append((start+(blocks_per_cluster-1)*block_size,end))
         blocks.append(current_block)
 
         # print(current_block)
@@ -119,7 +128,7 @@ def create_runbook(
     # for c in range(num_clusters):
         # num_block_per_round[c]=[num_block_per_round[c][y] for (x,y) in round_sum]
 
-    num_block_per_round=(num_block_per_round*100).astype(int)
+    num_block_per_round=(num_block_per_round*blocks_per_cluster).astype(int)
 
     for round in range(num_rounds-1):
         for c in range(num_clusters):
@@ -141,12 +150,14 @@ def create_runbook(
                 operation_list.append((num_operations, entry))
                 num_operations += 1
 
-                if num_operations%checkpoint_per_step==0:
-                    # operation_list.append((num_operations, [{'operation': str('search')}]))
-                    operation_list.append((num_operations, {'operation': str('search')}))
-                    num_operations += 1
-
                 cur_block_cursor[c]+=1
+            
+            # if num_operations%checkpoint_per_step==0:
+            # operation_list.append((num_operations, [{'operation': str('search')}]))
+            operation_list.append((num_operations, {'operation': str('search')}))
+            num_operations += 1
+
+                
 
         # delete a random fraction 30% to 60% of active points 
         
@@ -183,10 +194,10 @@ def create_runbook(
                 operation_list.append((num_operations, entry))
                 num_operations += 1
 
-                if num_operations%checkpoint_per_step==0:
-                    # operation_list.append((num_operations, [{'operation': str('search')}]))
-                    operation_list.append((num_operations, {'operation': str('search')}))
-                    num_operations += 1
+            # if num_operations%checkpoint_per_step==0:
+            # operation_list.append((num_operations, [{'operation': str('search')}]))
+            operation_list.append((num_operations, {'operation': str('search')}))
+            num_operations += 1
 
 
         print("round = ", round, "active points = ", active_points)
@@ -221,10 +232,10 @@ def create_runbook(
                 # operation_list.append((num_operations, {'operation': str('search')}))
                 # num_operations += 1
 
-                if num_operations%checkpoint_per_step==0:
-                    # operation_list.append((num_operations, [{'operation': str('search')}]))
-                    operation_list.append((num_operations, {'operation': str('search')}))
-                    num_operations += 1
+            # if num_operations%checkpoint_per_step==0:
+            #     # operation_list.append((num_operations, [{'operation': str('search')}]))
+            #     operation_list.append((num_operations, {'operation': str('search')}))
+            #     num_operations += 1
 
             for step in range(1):        
                 #deletions
@@ -252,12 +263,17 @@ def create_runbook(
                 # operation_list.append((num_operations, {'operation': 'search'}))
                 # num_operations += 1
 
-                if num_operations%checkpoint_per_step==0:
-                    # operation_list.append((num_operations, [{'operation': str('search')}]))
-                    operation_list.append((num_operations, {'operation': str('search')}))
-                    num_operations += 1
+            # if num_operations%checkpoint_per_step==0:
+            #     # operation_list.append((num_operations, [{'operation': str('search')}]))
+            #     operation_list.append((num_operations, {'operation': str('search')}))
+            #     num_operations += 1
             
             print("round = ", round, "active points = ", active_points)
+
+        # if num_operations%checkpoint_per_step==0:
+        # operation_list.append((num_operations, [{'operation': str('search')}]))
+        operation_list.append((num_operations, {'operation': str('search')}))
+        num_operations += 1
 
     with open(output_yaml_file, 'w') as yf:
         operation_list.sort(key = lambda x: x[0])
