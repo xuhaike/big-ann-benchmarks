@@ -80,6 +80,11 @@ def create_runbook(
         rng = np.random.default_rng(8164)
         checkpoint_per_step=3
         blocks_per_cluster=100
+    elif "msturing" in dataset_str:
+        random.seed(8165)
+        rng = np.random.default_rng(8165)
+        checkpoint_per_step=3
+        blocks_per_cluster=100
 
     # rng=np.random.default_rng()
 
@@ -95,6 +100,7 @@ def create_runbook(
         current_block=[]
         start=offsets[c]
         end=offsets[c+1]
+        # split each cluster into blocks_per_cluster and futuer inserts/deletes only happen in blocks
         block_size=(end-start)//blocks_per_cluster
         for i in range(blocks_per_cluster-1):
             current_block.append((start+i*block_size,start+(i+1)*block_size))
@@ -116,6 +122,7 @@ def create_runbook(
     num_rounds=6
     num_block_per_round = rng.dirichlet((100,15,10,5,3,1), num_clusters)
 
+    # randomly shuffle the number of blocks per round
     round_sum=[]
     for c in range(num_clusters):
         rng.shuffle(num_block_per_round[c])
@@ -130,7 +137,9 @@ def create_runbook(
 
     num_block_per_round=(num_block_per_round*blocks_per_cluster).astype(int)
 
+    # now the plan is to expand/shrink in the first num_rounds-1 rounds.
     for round in range(num_rounds-1):
+        # in each round, first do insertion for all clusters.
         for c in range(num_clusters):
             for step in range(num_block_per_round[c][round]):
                 #insertions
@@ -159,7 +168,7 @@ def create_runbook(
 
                 
 
-        # delete a random fraction 30% to 60% of active points 
+        # then delete a random fraction of 50% to 90% of the active points 
         
         print(round, num_operations, num_active_blocks[c],active_points)
 
@@ -173,6 +182,7 @@ def create_runbook(
 
             for step in range(delete_steps):        
                 #deletions
+                # our deletion strategy is to delete the oldest point w.p. 8/10, the latest point w.p. 1/10, and a random block w.p. 1/10
                 delete_type=random.randint(0,9)
                 if delete_type==9 and len(active_blocks[c])>2:
                     delete_id=random.randint(1, len(active_blocks[c])-2)
@@ -189,7 +199,6 @@ def create_runbook(
                 active_points -= delta
                 # print('del [', blocks[c][block_id][0], ', ', blocks[c][block_id][1], ')' , 'total:', active_points)
 
-                # entry = [{'operation': 'delete'}, {'start': int(blocks[c][block_id][0])}, {'end': int(blocks[c][block_id][1])}]
                 entry = {'operation': 'delete', 'start': int(blocks[c][block_id][0]), 'end': int(blocks[c][block_id][1])}
                 operation_list.append((num_operations, entry))
                 num_operations += 1
@@ -202,7 +211,7 @@ def create_runbook(
 
         print("round = ", round, "active points = ", active_points)
 
-    # in the later 40% steps, insert and delete in a interleaving way so that the index size is stable
+    # in the last round, insert and delete in a interleaving way so that the index size is stable
     
     for c in range(num_clusters):
 

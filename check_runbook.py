@@ -4,9 +4,10 @@ import yaml
 
 # dataset_name="msmarco-10M"
 # dataset_name="wikipedia-35M"
-dataset_name="openai-2M"
+# dataset_name="openai-2M"
+dataset_name="msturing-10M"
 
-plot_name="819aft"
+plot_name="820"
 
 if dataset_name=="msmarco-10M":
     # yaml_path="data/msmarco_websearch_20clustered/msmarco-10M-20clustered-general-runbook.yaml"
@@ -25,6 +26,9 @@ elif dataset_name=="openai-2M":
     # yaml_path="data/OpenAIArXiv_5clustered_dirichlet/openai-2M-5clustered-general-runbook.yaml"
     yaml_path="data/OpenAIArXiv_10clustered_dirichlet/openai-2M-10clustered-general-runbook.yaml"
     max_points=2321096
+elif dataset_name=="msturing-10M":
+    yaml_path="data/msturing_20clustered_dirichlet/msturing-10M-20clustered-general-runbook.yaml"
+    max_points=10000000
 
 with open(yaml_path, 'r') as file:
     data = yaml.safe_load(file)
